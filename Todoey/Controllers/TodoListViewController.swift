@@ -33,12 +33,9 @@ class TodoListViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TodoItemCell", for: indexPath)
-        cell.textLabel?.text = items[indexPath.row].title
-        if items[indexPath.row].isComplete == true {
-            cell.accessoryType = .checkmark
-        } else {
-            cell.accessoryType = .none
-        }
+        let item = items[indexPath.row]
+        cell.textLabel?.text = item.title
+        cell.accessoryType = item.isComplete ? .checkmark : .none
         return cell
     }
     
@@ -47,12 +44,7 @@ class TodoListViewController: UITableViewController {
         
         tableView.deselectRow(at: indexPath, animated: true)
         
-        // toggle checkmark of the list item
-        if items[indexPath.row].isComplete == false {
-            items[indexPath.row].isComplete = true
-        } else {
-            items[indexPath.row].isComplete = false
-        }
+        items[indexPath.row].isComplete = !items[indexPath.row].isComplete // toggle checkmark of the list item
         tableView.reloadData()
     }
     

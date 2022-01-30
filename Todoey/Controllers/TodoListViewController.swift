@@ -10,20 +10,25 @@ import UIKit
 
 class TodoListViewController: UITableViewController {
 
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     var items = [Item]()
-    let defaults = UserDefaults.standard
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        for i in 1...3 {
-            let newItem = Item()
-            newItem.title = "Buy Eggos: \(i)"
-            items.append(newItem)
-        }
-//        if let itemList = defaults.array(forKey: "TodoListArray") as? [String] {
-//            items = itemList
-//        }
+        let item1 = Item()
+        item1.title = "Find Mike"
+        items.append(item1)
+        
+        let item2 = Item()
+        item2.title = "Buy Eggos"
+        items.append(item2)
+        
+        let item3 = Item()
+        item3.title = "Destroy Demagorgon"
+        items.append(item3)
+        
+        loadItems()
     }
     
     //MARK: Table View Data Source Methods
@@ -41,11 +46,9 @@ class TodoListViewController: UITableViewController {
     
     //MARK: TableView Delgate Methods
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        
         tableView.deselectRow(at: indexPath, animated: true)
-        
         items[indexPath.row].isComplete = !items[indexPath.row].isComplete // toggle checkmark of the list item
-        tableView.reloadData()
+        saveItems()
     }
     
     //MARK: Add New Items
@@ -59,10 +62,7 @@ class TodoListViewController: UITableViewController {
             newItem.title = textField.text!
             
             self.items.append(newItem)
-            
-            self.defaults.set(self.items, forKey: "ToDoListArray")
-            
-            self.tableView.reloadData()
+            self.saveItems()
         }
         alert.addTextField { alertTextField in
             alertTextField.placeholder = "Buy milk, bread, eggs..."
@@ -72,7 +72,30 @@ class TodoListViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
     
-
+    //MARK: Model Manipulation Methods
+    
+    func saveItems() {
+        let encoder = PropertyListEncoder()
+        do {
+            let data = try encoder.encode(items)
+            try data.write(to: dataFilePath!)
+        } catch {
+            print("Error encoding item array, \(error)")
+        }
+        self.tableView.reloadData()
+    }
+    
+    func loadItems() {
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            let decoder = PropertyListDecoder()
+            do {
+                items = try decoder.decode([Item].self, from: data)
+            } catch {
+                print("Error decoding items, \(error)")
+            }
+            
+        }
+    }
 
 }
 

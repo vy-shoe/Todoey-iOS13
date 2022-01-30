@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import CoreData
 
 class TodoListViewController: UITableViewController {
 
@@ -29,7 +30,7 @@ class TodoListViewController: UITableViewController {
 //        item3.title = "Destroy Demagorgon"
 //        items.append(item3)
         
-//        loadItems()
+        loadItems()
     }
     
     //MARK: Table View Data Source Methods
@@ -84,17 +85,39 @@ class TodoListViewController: UITableViewController {
         self.tableView.reloadData()
     }
     
-//    func loadItems() {
-//        if let data = try? Data(contentsOf: dataFilePath!) {
-//            let decoder = PropertyListDecoder()
-//            do {
-//                items = try decoder.decode([Item].self, from: data)
-//            } catch {
-//                print("Error decoding items, \(error)")
-//            }
-//
-//        }
-//    }
-
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
+        do {
+            items = try context.fetch(request)
+        } catch {
+            print("Error fetching data from contect \(error)")
+        }
+        
+        tableView.reloadData()
+    }
 }
+
+//MARK: Search Bar Methods
+extension TodoListViewController: UISearchBarDelegate {
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        let request : NSFetchRequest<Item> = Item.fetchRequest()
+        // In order to query/filter from database, modify request and use predicate, cd disregards case and diacretics
+        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+
+        let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
+        request.sortDescriptors = [sortDescriptor]
+        
+        loadItems(with: request)
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        //if text in search bar has been changed to be cleared, must return back to original list (no queries) and remove keyboard
+        if searchBar.text?.count == 0 {
+            loadItems()
+            DispatchQueue.main.async { //being run in the foreground
+                searchBar.resignFirstResponder()
+            }
+        }
+    }
+}
+
 
